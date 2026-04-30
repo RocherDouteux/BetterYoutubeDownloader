@@ -25,13 +25,13 @@ internal static class UiFactory
             Dock = DockStyle.Top,
             Margin = new Padding(0, 0, 0, 8),
         };
-        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         panel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
         label.AutoSize = true;
         label.Margin = new Padding(0, 7, 8, 0);
-        label.MaximumSize = new Size(120, 0);
+        label.MaximumSize = new Size(150, 0);
         panel.Controls.Add(label, 0, 0);
 
         textBox.Dock = DockStyle.Fill;
