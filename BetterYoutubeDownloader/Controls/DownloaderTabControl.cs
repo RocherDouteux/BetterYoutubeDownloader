@@ -94,7 +94,6 @@ internal sealed class DownloaderTabControl : UserControl
         _streamListView.Columns.Add(T("Quality"), 160);
         _streamListView.Columns.Add(T("Container"), 100);
         _streamListView.Columns.Add(T("Size"), 120);
-        _streamListView.Columns.Add(T("Details"), 340);
         ResizeStreamColumns();
         _streamListView.SelectedIndexChanged += (_, _) =>
             _downloadButton.Enabled = _streamListView.SelectedItems.Count > 0 && _searchButton.Enabled;
@@ -171,28 +170,23 @@ internal sealed class DownloaderTabControl : UserControl
                 foreach (var stream in videoOnlyStreams)
                 {
                     AddMergedOption(T("VideoAudioMerged"), GetQualityLabel(stream), "mkv",
-                        $"{stream.Size} + {bestAudioStream.Size}",
-                        $"{stream.VideoCodec}, {stream.Bitrate} + {bestAudioStream.AudioCodec}, {bestAudioStream.Bitrate}",
-                        stream, bestAudioStream);
+                        $"{stream.Size} + {bestAudioStream.Size}", stream, bestAudioStream);
                 }
             }
 
             foreach (var stream in manifest.GetMuxedStreams().OrderByDescending(GetVideoHeight))
             {
-                AddStreamOption(T("VideoAudio"), GetQualityLabel(stream), stream.Container.Name, stream.Size.ToString(),
-                    $"{stream.VideoCodec}, {stream.AudioCodec}, {stream.Bitrate}", stream);
+                AddStreamOption(T("VideoAudio"), GetQualityLabel(stream), stream.Container.Name, stream.Size.ToString(), stream);
             }
 
             foreach (var stream in videoOnlyStreams)
             {
-                AddStreamOption(T("VideoOnly"), GetQualityLabel(stream), stream.Container.Name, stream.Size.ToString(),
-                    $"{stream.VideoCodec}, {stream.Bitrate}", stream);
+                AddStreamOption(T("VideoOnly"), GetQualityLabel(stream), stream.Container.Name, stream.Size.ToString(), stream);
             }
 
             foreach (var stream in manifest.GetAudioOnlyStreams().OrderByDescending(stream => stream.Bitrate.BitsPerSecond))
             {
-                AddStreamOption(T("AudioOnly"), stream.Bitrate.ToString(), stream.Container.Name, stream.Size.ToString(),
-                    $"{stream.AudioCodec}, {stream.Bitrate}", stream);
+                AddStreamOption(T("AudioOnly"), stream.Bitrate.ToString(), stream.Container.Name, stream.Size.ToString(), stream);
             }
 
             _statusLabel.Text = _downloadOptions.Count == 0
@@ -320,10 +314,10 @@ internal sealed class DownloaderTabControl : UserControl
     /// <summary>
     /// Adds a directly downloadable stream option to the backing list and visible table.
     /// </summary>
-    private void AddStreamOption(string type, string quality, string container, string size, string details, IStreamInfo streamInfo)
+    private void AddStreamOption(string type, string quality, string container, string size, IStreamInfo streamInfo)
     {
         _downloadOptions.Add(DownloadOption.ForStream(quality, streamInfo));
-        AddListItem(type, quality, container, size, details);
+        AddListItem(type, quality, container, size);
     }
 
     /// <summary>
@@ -334,24 +328,22 @@ internal sealed class DownloaderTabControl : UserControl
         string quality,
         string container,
         string size,
-        string details,
         IVideoStreamInfo videoStreamInfo,
         IStreamInfo audioStreamInfo)
     {
         _downloadOptions.Add(DownloadOption.ForMerged(quality, videoStreamInfo, audioStreamInfo));
-        AddListItem(type, quality, container, size, details);
+        AddListItem(type, quality, container, size);
     }
 
     /// <summary>
     /// Appends one row to the stream table.
     /// </summary>
-    private void AddListItem(string type, string quality, string container, string size, string details)
+    private void AddListItem(string type, string quality, string container, string size)
     {
         var item = new ListViewItem(type);
         item.SubItems.Add(quality);
         item.SubItems.Add(container);
         item.SubItems.Add(size);
-        item.SubItems.Add(details);
         _streamListView.Items.Add(item);
     }
 
@@ -416,19 +408,18 @@ internal sealed class DownloaderTabControl : UserControl
     /// </summary>
     private void ResizeStreamColumns()
     {
-        if (_streamListView.Columns.Count != 5 || _streamListView.ClientSize.Width <= 0)
+        if (_streamListView.Columns.Count != 4 || _streamListView.ClientSize.Width <= 0)
         {
             return;
         }
 
         var availableWidth = Math.Max(_streamListView.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4, 500);
-        var typeWidth = Math.Max(130, availableWidth * 15 / 100);
-        var qualityWidth = Math.Max(180, availableWidth * 24 / 100);
-        var containerWidth = Math.Max(110, availableWidth * 12 / 100);
-        var sizeWidth = Math.Max(120, availableWidth * 12 / 100);
-        var detailsWidth = Math.Max(260, availableWidth - typeWidth - qualityWidth - containerWidth - sizeWidth);
+        var typeWidth = Math.Max(180, availableWidth * 20 / 100);
+        var qualityWidth = Math.Max(360, availableWidth * 45 / 100);
+        var containerWidth = Math.Max(140, availableWidth * 15 / 100);
+        var sizeWidth = Math.Max(160, availableWidth - typeWidth - qualityWidth - containerWidth);
 
-        var widths = new[] { typeWidth, qualityWidth, containerWidth, sizeWidth, detailsWidth };
+        var widths = new[] { typeWidth, qualityWidth, containerWidth, sizeWidth };
         var changed = false;
         for (var i = 0; i < widths.Length; i++)
         {

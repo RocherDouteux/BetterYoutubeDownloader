@@ -17,7 +17,6 @@ internal static class AppText
         ["Quality"] = "Quality",
         ["Container"] = "Container",
         ["Size"] = "Size",
-        ["Details"] = "Details",
         ["DownloadSelected"] = "Download Selected",
         ["DownloaderReady"] = "Enter a URL, then search for available video and audio streams.",
         ["EnterUrlFirst"] = "Enter a YouTube URL first.",
