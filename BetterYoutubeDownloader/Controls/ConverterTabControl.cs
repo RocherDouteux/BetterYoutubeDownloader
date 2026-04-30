@@ -67,6 +67,7 @@ internal sealed class ConverterTabControl : UserControl
         };
         _formatLabel.AutoSize = true;
         _formatLabel.Margin = new Padding(0, 7, 8, 0);
+        _formatLabel.MinimumSize = new Size(130, 0);
         _formatLabel.Text = T("OutputFormat");
         formatPanel.Controls.Add(_formatLabel);
 
