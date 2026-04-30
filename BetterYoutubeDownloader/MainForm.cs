@@ -19,7 +19,8 @@ internal sealed class MainForm : Form
     {
         Text = AppText.T("AppTitle");
         Size = new Size(1200, 820);
-        MinimumSize = new Size(850, 520);
+        FormBorderStyle = FormBorderStyle.FixedSingle;
+        MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
         Font = new Font("Segoe UI", 10F, FontStyle.Regular);
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
