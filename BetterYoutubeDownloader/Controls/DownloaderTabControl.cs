@@ -20,20 +20,12 @@ internal sealed class DownloaderTabControl : UserControl
     private readonly Label _statusLabel = new();
     private readonly ProgressBar _progressBar = new();
     private readonly List<DownloadOption> _downloadOptions = [];
-    private readonly System.Windows.Forms.Timer _resizeColumnsTimer = new();
 
     /// <summary>
     /// Creates the downloader tab and initializes its child controls.
     /// </summary>
     public DownloaderTabControl()
     {
-        _resizeColumnsTimer.Interval = 150;
-        _resizeColumnsTimer.Tick += (_, _) =>
-        {
-            _resizeColumnsTimer.Stop();
-            ResizeStreamColumns();
-        };
-
         Controls.Add(CreateContent());
     }
 
@@ -89,12 +81,11 @@ internal sealed class DownloaderTabControl : UserControl
         _streamListView.MultiSelect = false;
         _streamListView.View = View.Details;
         _streamListView.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
-        _streamListView.Resize += (_, _) => ScheduleStreamColumnResize();
         _streamListView.Columns.Add(T("Type"), 140);
         _streamListView.Columns.Add(T("Quality"), 160);
         _streamListView.Columns.Add(T("Container"), 100);
         _streamListView.Columns.Add(T("Size"), 120);
-        ResizeStreamColumns();
+        AutoSizeStreamColumns();
         _streamListView.SelectedIndexChanged += (_, _) =>
             _downloadButton.Enabled = _streamListView.SelectedItems.Count > 0 && _searchButton.Enabled;
         _streamListView.DoubleClick += async (_, _) => await DownloadSelectedAsync();
@@ -192,6 +183,7 @@ internal sealed class DownloaderTabControl : UserControl
             _statusLabel.Text = _downloadOptions.Count == 0
                 ? T("NoStreams")
                 : T("FoundStreams", _downloadOptions.Count);
+            AutoSizeStreamColumns();
         }
         catch (Exception ex)
         {
@@ -404,33 +396,11 @@ internal sealed class DownloaderTabControl : UserControl
     }
 
     /// <summary>
-    /// Resizes stream columns so the table fills the available width without leaving a blank area.
+    /// Resizes each stream column to fit the widest header or cell value in that column.
     /// </summary>
-    private void ResizeStreamColumns()
+    private void AutoSizeStreamColumns()
     {
-        if (_streamListView.Columns.Count != 4 || _streamListView.ClientSize.Width <= 0)
-        {
-            return;
-        }
-
-        var availableWidth = Math.Max(_streamListView.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 4, 500);
-        var typeWidth = Math.Max(180, availableWidth * 20 / 100);
-        var qualityWidth = Math.Max(360, availableWidth * 45 / 100);
-        var containerWidth = Math.Max(140, availableWidth * 15 / 100);
-        var sizeWidth = Math.Max(160, availableWidth - typeWidth - qualityWidth - containerWidth);
-
-        var widths = new[] { typeWidth, qualityWidth, containerWidth, sizeWidth };
-        var changed = false;
-        for (var i = 0; i < widths.Length; i++)
-        {
-            if (_streamListView.Columns[i].Width != widths[i])
-            {
-                changed = true;
-                break;
-            }
-        }
-
-        if (!changed)
+        if (_streamListView.Columns.Count == 0)
         {
             return;
         }
@@ -438,9 +408,28 @@ internal sealed class DownloaderTabControl : UserControl
         _streamListView.BeginUpdate();
         try
         {
-            for (var i = 0; i < widths.Length; i++)
+            using var graphics = _streamListView.CreateGraphics();
+            for (var columnIndex = 0; columnIndex < _streamListView.Columns.Count; columnIndex++)
             {
-                _streamListView.Columns[i].Width = widths[i];
+                var width = TextRenderer.MeasureText(
+                    graphics,
+                    _streamListView.Columns[columnIndex].Text,
+                    _streamListView.Font).Width;
+
+                foreach (ListViewItem item in _streamListView.Items)
+                {
+                    if (item.SubItems.Count <= columnIndex)
+                    {
+                        continue;
+                    }
+
+                    width = Math.Max(width, TextRenderer.MeasureText(
+                        graphics,
+                        item.SubItems[columnIndex].Text,
+                        _streamListView.Font).Width);
+                }
+
+                _streamListView.Columns[columnIndex].Width = width + 28;
             }
         }
         finally
@@ -449,30 +438,9 @@ internal sealed class DownloaderTabControl : UserControl
         }
     }
 
-    /// <summary>
-    /// Debounces column resizing so populated stream lists do not redraw on every resize pixel.
-    /// </summary>
-    private void ScheduleStreamColumnResize()
-    {
-        _resizeColumnsTimer.Stop();
-        _resizeColumnsTimer.Start();
-    }
-
     private string T(string key, params object[] args)
     {
         return AppText.T(key, args);
     }
 
-    /// <summary>
-    /// Releases the resize debounce timer owned by this control.
-    /// </summary>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _resizeColumnsTimer.Dispose();
-        }
-
-        base.Dispose(disposing);
-    }
 }
