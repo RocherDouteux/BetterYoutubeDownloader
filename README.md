@@ -1,6 +1,6 @@
 # Better YouTube Downloader
 
-Better YouTube Downloader is a portable Windows Forms app created for RocherDouteux.
+Better YouTube Downloader is a portable Windows Forms app created by RocherDouteux.
 
 It can inspect YouTube video and Shorts URLs, list available video/audio streams, download audio-only streams, download high-quality merged video with audio, and convert local video files between common formats.
 
