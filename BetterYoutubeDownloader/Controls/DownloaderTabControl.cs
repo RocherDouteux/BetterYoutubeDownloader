@@ -15,7 +15,7 @@ internal sealed class DownloaderTabControl : UserControl
     private readonly TextBox _urlTextBox = new();
     private readonly Button _searchButton = new();
     private readonly Button _downloadButton = new();
-    private readonly ListView _streamListView = new();
+    private readonly ListView _streamListView = new BufferedListView();
     private readonly Label _titleLabel = new();
     private readonly Label _statusLabel = new();
     private readonly ProgressBar _progressBar = new();
@@ -87,11 +87,8 @@ internal sealed class DownloaderTabControl : UserControl
         _streamListView.GridLines = true;
         _streamListView.HideSelection = false;
         _streamListView.MultiSelect = false;
-        _streamListView.OwnerDraw = true;
         _streamListView.View = View.Details;
         _streamListView.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
-        _streamListView.DrawColumnHeader += DrawStreamListColumnHeader;
-        _streamListView.DrawSubItem += DrawStreamListSubItem;
         _streamListView.Resize += (_, _) => ScheduleStreamColumnResize();
         _streamListView.Columns.Add(T("Type"), 140);
         _streamListView.Columns.Add(T("Quality"), 160);
@@ -468,54 +465,6 @@ internal sealed class DownloaderTabControl : UserControl
     {
         _resizeColumnsTimer.Stop();
         _resizeColumnsTimer.Start();
-    }
-
-    /// <summary>
-    /// Draws the list header with readable dark-theme colors.
-    /// </summary>
-    private void DrawStreamListColumnHeader(object? sender, DrawListViewColumnHeaderEventArgs e)
-    {
-        var backColor = Color.FromArgb(248, 250, 252);
-        var foreColor = Color.FromArgb(15, 23, 42);
-        var borderColor = Color.FromArgb(203, 213, 225);
-
-        using var backBrush = new SolidBrush(backColor);
-        using var borderPen = new Pen(borderColor);
-        e.Graphics.FillRectangle(backBrush, e.Bounds);
-        e.Graphics.DrawRectangle(borderPen, e.Bounds);
-        TextRenderer.DrawText(
-            e.Graphics,
-            e.Header?.Text ?? "",
-            Font,
-            new Rectangle(e.Bounds.Left + 8, e.Bounds.Top, e.Bounds.Width - 12, e.Bounds.Height),
-            foreColor,
-            TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
-    }
-
-    /// <summary>
-    /// Draws stream table rows with alternating dark-theme backgrounds and selected-row contrast.
-    /// </summary>
-    private void DrawStreamListSubItem(object? sender, DrawListViewSubItemEventArgs e)
-    {
-        var selected = e.Item?.Selected == true;
-        var evenRow = e.ItemIndex % 2 == 0;
-        var backColor = selected
-            ? Color.FromArgb(191, 219, 254)
-            : evenRow ? Color.White : Color.FromArgb(248, 250, 252);
-        var foreColor = Color.FromArgb(15, 23, 42);
-        var gridColor = Color.FromArgb(226, 232, 240);
-
-        using var backBrush = new SolidBrush(backColor);
-        using var gridPen = new Pen(gridColor);
-        e.Graphics.FillRectangle(backBrush, e.Bounds);
-        e.Graphics.DrawRectangle(gridPen, e.Bounds);
-        TextRenderer.DrawText(
-            e.Graphics,
-            e.SubItem?.Text ?? "",
-            Font,
-            new Rectangle(e.Bounds.Left + 8, e.Bounds.Top, e.Bounds.Width - 12, e.Bounds.Height),
-            foreColor,
-            TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
     }
 
     private string T(string key, params object[] args)
